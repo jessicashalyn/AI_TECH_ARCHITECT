@@ -3,7 +3,7 @@ from django.conf import settings
 from google import genai
 # pyrefly: ignore [missing-import]
 from google.genai import types
-from .schemas import ArchitectureResponse
+from .schemas import ArchitectureResponse, get_gemini_schema
 from .prompts import SYSTEM_PROMPT
 import logging
 
@@ -31,7 +31,7 @@ def generate_architecture_from_requirements(requirements_data: dict) -> dict:
             contents=[SYSTEM_PROMPT, prompt],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema=ArchitectureResponse,
+                response_schema=get_gemini_schema(),
                 temperature=0.7,
             ),
         )

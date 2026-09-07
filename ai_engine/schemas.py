@@ -41,3 +41,36 @@ class ArchitectureResponse(BaseModel):
     risks: List[str]
     improvements: List[str]
     summary: str
+
+def _inline_refs(schema, defs):
+    if isinstance(schema, dict):
+        if "$ref" in schema:
+            ref_path = schema["$ref"]
+            def_name = ref_path.split("/")[-1]
+            resolved = defs.get(def_name, {}).copy()
+            return _inline_refs(resolved, defs)
+        
+        new_schema = {}
+        for k, v in schema.items():
+            if k == "$defs":
+                continue
+            if k == "anyOf":
+                types = [_inline_refs(item, defs) for item in v]
+                non_nulls = [t for t in types if t.get('type') != 'null']
+                if non_nulls:
+                    new_schema.update(non_nulls[0])
+                    new_schema["nullable"] = True
+                continue
+            new_schema[k] = _inline_refs(v, defs)
+        return new_schema
+    elif isinstance(schema, list):
+        return [_inline_refs(item, defs) for item in schema]
+    return schema
+
+def get_gemini_schema() -> dict:
+    raw_schema = ArchitectureResponse.model_json_schema()
+    defs = raw_schema.get("$defs", {})
+    resolved_schema = _inline_refs(raw_schema, defs)
+    if "$defs" in resolved_schema:
+        del resolved_schema["$defs"]
+    return resolved_schema
