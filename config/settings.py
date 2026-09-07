@@ -94,3 +94,23 @@ LOGIN_URL = 'accounts:login'
 
 AI_API_KEY = os.environ.get('AI_API_KEY')
 AI_MODEL = os.environ.get('AI_MODEL', 'gemini-2.5-flash')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'ai_engine': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+        'api': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}

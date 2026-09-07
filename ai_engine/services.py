@@ -5,6 +5,9 @@ from google import genai
 from google.genai import types
 from .schemas import ArchitectureResponse
 from .prompts import SYSTEM_PROMPT
+import logging
+
+logger = logging.getLogger(__name__)
 
 def generate_architecture_from_requirements(requirements_data: dict) -> dict:
     if not settings.AI_API_KEY:
@@ -26,12 +29,15 @@ def generate_architecture_from_requirements(requirements_data: dict) -> dict:
         )
         
         result_json = response.text
+        logger.info(f"AI Response raw length: {len(result_json)}")
+        logger.info(f"AI Response raw text starts with: {result_json[:200]}...")
         # the response might have markdown block
         if result_json.startswith("```json"):
             result_json = result_json[7:-3]
             
         validated_data = ArchitectureResponse.model_validate_json(result_json)
         dumped = validated_data.model_dump()
+        logger.info(f"Dumped JSON keys: {list(dumped.keys())}")
         
         # Clean mermaid formatting if the AI still included it
         diagram = dumped.get("diagram_data", "")

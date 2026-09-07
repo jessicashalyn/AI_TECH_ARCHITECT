@@ -4,6 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 import threading
+import logging
+
+logger = logging.getLogger(__name__)
 
 from projects.models import Project, ProjectRequirement
 from architecture.models import ArchitectureReport
@@ -59,20 +62,23 @@ class GenerateArchitectureAPIView(APIView):
         def run_ai():
             try:
                 result = generate_architecture_from_requirements(req_data)
-                report.technology_stack = result.get('technology_stack')
-                report.database_design = result.get('database_design')
-                report.api_architecture = result.get('api_architecture')
-                report.cloud_architecture = result.get('cloud_architecture')
-                report.security_checklist = result.get('security_checklist')
-                report.scalability_strategy = result.get('scalability_strategy')
-                report.diagram_data = result.get('diagram_data')
-                report.architecture_score = result.get('architecture_score')
-                report.strengths = result.get('strengths')
-                report.risks = result.get('risks')
-                report.improvements = result.get('improvements')
-                report.summary = result.get('summary')
+                logger.info(f"AI generate result successfully parsed for project {project.id}. Keys present: {list(result.keys())}")
+                
+                report.technology_stack = result.get('technology_stack') or []
+                report.database_design = result.get('database_design') or {}
+                report.api_architecture = result.get('api_architecture') or {}
+                report.cloud_architecture = result.get('cloud_architecture') or {}
+                report.security_checklist = result.get('security_checklist') or []
+                report.scalability_strategy = result.get('scalability_strategy') or []
+                report.diagram_data = result.get('diagram_data', '')
+                report.architecture_score = result.get('architecture_score', 0)
+                report.strengths = result.get('strengths') or []
+                report.risks = result.get('risks') or []
+                report.improvements = result.get('improvements') or []
+                report.summary = result.get('summary', '')
                 report.status = 'completed'
                 report.save()
+                logger.info(f"Report {report.id} saved successfully with status 'completed'")
             except Exception as e:
                 report.status = 'failed'
                 report.error_message = str(e)
