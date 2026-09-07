@@ -1,0 +1,25 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="padding: 3rem 0;">
+    <div class="card animate-slide-up">
+        <h2>{{ object.name }}</h2>
+        <p>{{ object.description }}</p>
+        <p class="text-muted">Type: {{ object.requirement.app_type }}</p>
+        
+        <h3 style="margin-top:2rem;">Architecture Reports</h3>
+        {% if object.architecture_reports.exists %}
+            <ul>
+                {% for r in object.architecture_reports.all %}
+                    <li>
+                        <a href="{% url 'architecture:report_detail' r.id %}">Report {{ r.created_at|date:"Y-m-d H:i" }}</a> 
+                        - Score: {{ r.architecture_score }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No reports generated yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

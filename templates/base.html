@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tech Architect {% block title %}{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="{% url 'home' %}" class="nav-brand text-gradient">AI Tech Architect</a>
+
+            <ul class="nav-links">
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'projects:dashboard' %}" class="nav-link">Dashboard</a></li>
+                <li><a href="{% url 'projects:project_create' %}" class="btn btn-primary btn-sm">+ New Architecture</a>
+                </li>
+                <li>
+                    <form method="post" action="{% url 'accounts:logout' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link"
+                            style="background:none;border:none;cursor:pointer;font-family:inherit;font-size:inherit;">Logout</button>
+                    </form>
+                </li>
+                {% else %}
+                <li><a href="{% url 'home' %}" class="nav-link">Home</a></li>
+                <li><a href="{% url 'accounts:login' %}" class="nav-link">Login</a></li>
+                <li><a href="{% url 'accounts:register' %}" class="btn btn-primary">Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

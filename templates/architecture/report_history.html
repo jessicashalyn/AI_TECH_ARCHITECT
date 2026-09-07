@@ -1,0 +1,12 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>History for {{ project.name }}</h2>
+    <ul>
+        {% for report in reports %}
+            <li><a href="{% url 'architecture:report_detail' report.id %}">{{ report.created_at }}</a> - Score: {{ report.architecture_score }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

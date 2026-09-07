@@ -1,0 +1,262 @@
+
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .progress-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+    
+    .progress-container::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0; right: 0;
+        height: 2px;
+        background: var(--color-border);
+        z-index: 1;
+        transform: translateY(-50%);
+    }
+    
+    .progress-step {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 2px solid var(--color-border);
+        display: flex; justify-content: center; align-items: center;
+        z-index: 2;
+        font-weight: 600; font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step.active {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 10px var(--color-primary-glow);
+        background: var(--color-primary);
+        color: white;
+    }
+    
+    .progress-step.completed {
+        border-color: var(--color-primary);
+        background: var(--bg-card);
+        color: var(--color-primary);
+    }
+    
+    .form-step {
+        display: none;
+    }
+    
+    .form-step.active {
+        display: block;
+    }
+    
+    #generation-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loader {
+        width: 60px; height: 60px;
+        border: 4px solid rgba(6, 182, 212, 0.2);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 2rem;
+    }
+    
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="generation-overlay">
+    <div class="loader"></div>
+    <h2 id="loading-message" class="text-gradient">Initializing AI Engine...</h2>
+</div>
+
+<div class="container" style="max-width: 800px; padding-top: 3rem; padding-bottom: 5rem;">
+    <div class="card animate-slide-up">
+        <h2 style="margin-bottom: 2rem;">Create Architecture</h2>
+        
+        <div class="progress-container">
+            <div class="progress-step active">1</div>
+            <div class="progress-step">2</div>
+            <div class="progress-step">3</div>
+            <div class="progress-step">4</div>
+        </div>
+        
+        <form id="architecture-form">
+            <!-- Step 1 -->
+            <div class="form-step active" id="step-1">
+                <h3>Project Information</h3>
+                <div class="form-group">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" id="p_name" class="form-control" required placeholder="e.g. HealthTracker Pro">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea id="p_desc" class="form-control" rows="3" required placeholder="Briefly describe what the application does..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Application Type</label>
+                    <select id="id_app_type" class="form-control">
+                        <option value="web">Web Application</option>
+                        <option value="mobile">Mobile Application</option>
+                        <option value="ecommerce">E-Commerce</option>
+                        <option value="ai">AI / Machine Learning</option>
+                        <option value="saas">SaaS Platform</option>
+                    </select>
+                </div>
+                
+                <div id="conditional-ai" style="display: none; padding: 1rem; background: rgba(6, 182, 212, 0.05); border-left: 3px solid var(--color-primary); border-radius: 4px; margin-bottom: 1.5rem;">
+                    <div class="form-group mb-0">
+                        <label class="form-label">AI Integration Type</label>
+                        <input type="text" id="p_ai_type" class="form-control" placeholder="e.g. LLM Chatbot, Image Generation, Recommendation Engine">
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-primary next-step">Next Step &rarr;</button>
+                </div>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="form-step" id="step-2">
+                <h3>Technical Preferences</h3>
+                <div class="form-group">
+                    <label class="form-label">Key Features</label>
+                    <textarea id="p_features" class="form-control" rows="3" placeholder="Real-time chat, payment processing, video streaming..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Technology Preferences (Optional)</label>
+                    <textarea id="p_tech" class="form-control" rows="2" placeholder="e.g. prefer Python/Django, prefer PostgreSQL..."></textarea>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary prev-step">&larr; Previous</button>
+                    <button type="button" class="btn btn-primary next-step">Next Step &rarr;</button>
+                </div>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="form-step" id="step-3">
+                <h3>Scale & Infrastructure</h3>
+                <div class="form-group">
+                    <label class="form-label">Expected Users (Month 1)</label>
+                    <select id="p_users" class="form-control">
+                        <option value="1-1k">1 - 1,000</option>
+                        <option value="1k-10k">1,000 - 10,000</option>
+                        <option value="10k-100k">10,000 - 100,000</option>
+                        <option value="100k+">100,000+</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Infrastructure Requirements</label>
+                    <textarea id="p_infra" class="form-control" rows="2" placeholder="e.g. AWS preferred, Docker required..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Scalability Requirements</label>
+                    <textarea id="p_scale" class="form-control" rows="2" placeholder="e.g. High availability, multi-region..."></textarea>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary prev-step">&larr; Previous</button>
+                    <button type="button" class="btn btn-primary next-step">Next Step &rarr;</button>
+                </div>
+            </div>
+            
+            <!-- Step 4 -->
+            <div class="form-step" id="step-4">
+                <h3>Security & Review</h3>
+                <div class="form-group">
+                    <label class="form-label">Security & Compliance</label>
+                    <textarea id="p_sec" class="form-control" rows="3" placeholder="e.g. HIPAA compliance, end-to-end encryption..."></textarea>
+                </div>
+                
+                <div class="card" style="background: rgba(6, 182, 212, 0.05); border-color: var(--color-primary); margin-bottom: 2rem;">
+                    <h4 style="color: var(--color-primary); margin-bottom: 0.5rem;">Ready to Generate</h4>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0;">Our AI Engine will now analyze your requirements and construct a complete production-grade architecture recommendation.</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary prev-step">&larr; Previous</button>
+                    <button type="submit" class="btn btn-primary" id="generate-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Generate Architecture
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="/static/js/form.js"></script>
+<script>
+document.getElementById('architecture-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        name: document.getElementById('p_name').value,
+        description: document.getElementById('p_desc').value,
+        app_type: document.getElementById('id_app_type').value,
+        features: document.getElementById('p_features').value,
+        tech_preferences: document.getElementById('p_tech').value,
+        expected_users: document.getElementById('p_users').value,
+        infrastructure_requirements: document.getElementById('p_infra').value,
+        scalability_requirements: document.getElementById('p_scale').value,
+        security_requirements: document.getElementById('p_sec').value,
+    };
+    
+    try {
+        const createRes = await fetch('/api/project/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(data)
+        });
+        const createData = await createRes.json();
+        
+        const genRes = await fetch(`/api/architecture/generate/${createData.project_id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        });
+        const genData = await genRes.json();
+        const reportId = genData.report_id;
+        
+        // Poll for completion
+        const interval = setInterval(async () => {
+            const statusRes = await fetch(`/api/architecture/status/${reportId}/`);
+            const statusData = await statusRes.json();
+            
+            if (statusData.status === 'completed') {
+                clearInterval(interval);
+                window.location.href = `/architecture/report/${reportId}/`;
+            } else if (statusData.status === 'failed') {
+                clearInterval(interval);
+                alert("Generation failed. Check server logs.");
+                document.getElementById('generation-overlay').style.display = 'none';
+            }
+        }, 3000);
+        
+    } catch(err) {
+        console.error(err);
+        alert("An error occurred.");
+        document.getElementById('generation-overlay').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
