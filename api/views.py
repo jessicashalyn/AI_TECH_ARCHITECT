@@ -59,35 +59,32 @@ class GenerateArchitectureAPIView(APIView):
             "scalability": req.scalability_requirements
         }
         
-        def run_ai():
-            try:
-                result = generate_architecture_from_requirements(req_data)
-                logger.info(f"AI generate result successfully parsed for project {project.id}. Keys present: {list(result.keys())}")
-                
-                report.technology_stack = result.get('technology_stack') or []
-                report.database_design = result.get('database_design') or {}
-                report.api_architecture = result.get('api_architecture') or {}
-                report.cloud_architecture = result.get('cloud_architecture') or {}
-                report.security_checklist = result.get('security_checklist') or []
-                report.scalability_strategy = result.get('scalability_strategy') or []
-                report.diagram_data = result.get('diagram_data', '')
-                report.architecture_score = result.get('architecture_score', 0)
-                report.strengths = result.get('strengths') or []
-                report.risks = result.get('risks') or []
-                report.improvements = result.get('improvements') or []
-                report.summary = result.get('summary', '')
-                report.status = 'completed'
-                report.save()
-                logger.info(f"Report {report.id} saved successfully with status 'completed'")
-            except Exception as e:
-                report.status = 'failed'
-                report.error_message = str(e)
-                report.save()
-                
-        thread = threading.Thread(target=run_ai)
-        thread.start()
-        
-        return Response({'report_id': report.id}, status=status.HTTP_202_ACCEPTED)
+        try:
+            result = generate_architecture_from_requirements(req_data)
+            logger.info(f"AI generate result successfully parsed for project {project.id}. Keys present: {list(result.keys())}")
+            
+            report.technology_stack = result.get('technology_stack') or []
+            report.database_design = result.get('database_design') or {}
+            report.api_architecture = result.get('api_architecture') or {}
+            report.cloud_architecture = result.get('cloud_architecture') or {}
+            report.security_checklist = result.get('security_checklist') or []
+            report.scalability_strategy = result.get('scalability_strategy') or []
+            report.diagram_data = result.get('diagram_data', '')
+            report.architecture_score = result.get('architecture_score', 0)
+            report.strengths = result.get('strengths') or []
+            report.risks = result.get('risks') or []
+            report.improvements = result.get('improvements') or []
+            report.summary = result.get('summary', '')
+            report.status = 'completed'
+            report.save()
+            logger.info(f"Report {report.id} saved successfully with status 'completed'")
+        except Exception as e:
+            logger.error(f"Generation failed for project {project.id}: {str(e)}", exc_info=True)
+            report.status = 'failed'
+            report.error_message = str(e)
+            report.save()
+            
+        return Response({'report_id': report.id}, status=status.HTTP_200_OK)
 
 class ReportStatusAPIView(APIView):
     permission_classes = [IsAuthenticated]

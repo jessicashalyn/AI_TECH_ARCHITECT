@@ -11,9 +11,17 @@ logger = logging.getLogger(__name__)
 
 def generate_architecture_from_requirements(requirements_data: dict) -> dict:
     if not settings.AI_API_KEY:
+        logger.error("AI_API_KEY is not configured in settings")
         raise ValueError("AI_API_KEY is not configured")
         
-    client = genai.Client(api_key=settings.AI_API_KEY)
+    logger.info(f"Using AI_MODEL: {settings.AI_MODEL}")
+    logger.info(f"AI_API_KEY length: {len(settings.AI_API_KEY)}")
+    
+    try:
+        client = genai.Client(api_key=settings.AI_API_KEY)
+    except Exception as e:
+        logger.error("Failed to initialize genai.Client", exc_info=True)
+        raise
     
     prompt = f"Project Requirements:\n{json.dumps(requirements_data, indent=2)}\n\nGenerate the optimal architecture."
     
