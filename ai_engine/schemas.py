@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+import json
 
 class TechnologyOption(BaseModel):
     name: str
@@ -42,35 +43,53 @@ class ArchitectureResponse(BaseModel):
     improvements: List[str]
     summary: str
 
-def _inline_refs(schema, defs):
+def sanitize_for_gemini(schema, defs):
+    ALLOWED_KEYS = {'type', 'properties', 'required', 'items', 'enum', 'description', 'nullable'}
+    
     if isinstance(schema, dict):
         if "$ref" in schema:
             ref_path = schema["$ref"]
             def_name = ref_path.split("/")[-1]
             resolved = defs.get(def_name, {}).copy()
-            return _inline_refs(resolved, defs)
+            return sanitize_for_gemini(resolved, defs)
         
         new_schema = {}
+        
+        # Handle anyOf for optionals first
+        if "anyOf" in schema:
+            types = [sanitize_for_gemini(item, defs) for item in schema["anyOf"]]
+            non_nulls = [t for t in types if t.get('type') != 'null']
+            if non_nulls:
+                new_schema.update(non_nulls[0])
+                new_schema["nullable"] = True
+                
+        # Process the rest of the allowed keys
         for k, v in schema.items():
-            if k == "$defs":
-                continue
-            if k == "anyOf":
-                types = [_inline_refs(item, defs) for item in v]
-                non_nulls = [t for t in types if t.get('type') != 'null']
-                if non_nulls:
-                    new_schema.update(non_nulls[0])
-                    new_schema["nullable"] = True
-                continue
-            new_schema[k] = _inline_refs(v, defs)
+            if k in ALLOWED_KEYS:
+                if k == "properties" and isinstance(v, dict):
+                    # v maps property_name -> property_schema
+                    new_schema[k] = {
+                        prop_name: sanitize_for_gemini(prop_schema, defs)
+                        for prop_name, prop_schema in v.items()
+                    }
+                else:
+                    new_schema[k] = sanitize_for_gemini(v, defs)
+                
         return new_schema
+        
     elif isinstance(schema, list):
-        return [_inline_refs(item, defs) for item in schema]
+        return [sanitize_for_gemini(item, defs) for item in schema]
+        
     return schema
 
 def get_gemini_schema() -> dict:
     raw_schema = ArchitectureResponse.model_json_schema()
     defs = raw_schema.get("$defs", {})
-    resolved_schema = _inline_refs(raw_schema, defs)
-    if "$defs" in resolved_schema:
-        del resolved_schema["$defs"]
+    resolved_schema = sanitize_for_gemini(raw_schema, defs)
+    
+    serialized = json.dumps(resolved_schema)
+    assert "$ref" not in serialized, "Found $ref in Gemini schema"
+    assert "$defs" not in serialized, "Found $defs in Gemini schema"
+    assert "title" not in serialized, "Found title in Gemini schema"
+    
     return resolved_schema
